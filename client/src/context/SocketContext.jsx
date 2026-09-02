@@ -29,7 +29,7 @@ export function SocketProvider({ children }) {
 
     socket.on('connect', () => {
       setConnected(true)
-      // Join user-specific room
+      // Join user-specific room and agent room if applicable
       socket.emit('join', { userId: user._id, role: user.role })
     })
 
@@ -41,22 +41,30 @@ export function SocketProvider({ children }) {
       setConnected(false)
     })
 
-    // Global notifications
+    // Direct event listeners from notificationService
+    socket.on('ticket-assigned', (data) => {
+      const tNum = data.ticket?.ticketNumber ? ` #${data.ticket.ticketNumber}` : ''
+      toast.success(`Ticket${tNum} assigned to you!`, { icon: '🎫' })
+    })
+
+    socket.on('sla-warning', (data) => {
+      const tNum = data.ticket?.ticketNumber ? ` #${data.ticket.ticketNumber}` : ''
+      toast.error(`⚠️ SLA Warning: Ticket${tNum} is approaching deadline!`, { icon: '⚠️', duration: 8000 })
+    })
+
+    socket.on('ticket-escalated', (data) => {
+      const tNum = data.ticket?.ticketNumber ? ` #${data.ticket.ticketNumber}` : ''
+      toast.error(`🚨 SLA Breached: Ticket${tNum} has been escalated!`, { icon: '🚨', duration: 8000 })
+    })
+
+    socket.on('ticket-resolved', (data) => {
+      const tNum = data.ticket?.ticketNumber ? ` #${data.ticket.ticketNumber}` : ''
+      toast.success(`Ticket${tNum} marked as resolved!`, { icon: '✅' })
+    })
+
+    // Generic notification
     socket.on('notification', (data) => {
-      const { type, message } = data
-      if (type === 'ticket-assigned') {
-        toast.success(message, { icon: '🎫' })
-      } else if (type === 'sla-warning') {
-        toast.error(message, { icon: '⚠️', duration: 8000 })
-      } else if (type === 'new-message') {
-        toast(message, { icon: '💬' })
-      } else if (type === 'status-changed') {
-        toast(message, { icon: '🔄' })
-      } else if (type === 'escalated') {
-        toast.error(message, { icon: '🚨', duration: 8000 })
-      } else {
-        toast(message)
-      }
+      if (data.message) toast(data.message)
     })
 
     return () => {
