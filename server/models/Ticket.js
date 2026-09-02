@@ -139,7 +139,6 @@ ticketSchema.index({ assignedAgent: 1 });
 ticketSchema.index({ client: 1 });
 ticketSchema.index({ createdAt: -1 });
 ticketSchema.index({ slaDeadline: 1 });
-ticketSchema.index({ ticketNumber: 1 });
 ticketSchema.index({ escalated: 1 });
 
 module.exports = mongoose.model('Ticket', ticketSchema);
